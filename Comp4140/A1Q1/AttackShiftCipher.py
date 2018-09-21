@@ -2,25 +2,36 @@ import string
 import math
 
 ENGLISH_DIST = 0.065
-NUM_KEYS = 26 #represents the cardinality of our key space K
 ALPHABET = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 ENGLISH_FREQS = [0.082, 0.015, 0.028, 0.043, 0.127, 0.022, 0.020, 0.061, 0.070, 0.002, 0.008, 0.040, 0.024, 0.067, 0.015, 0.019, 0.001, 0.060, 0.063, 0.091, 0.028, 0.010, 0.024, 0.002, 0.020, 0.001]
 DECIMALS = 3 #for rounding
-NUM_LETTERS = 26 #number of letters in our alphabet (english)
+NUM_LETTERS = len(ALPHABET) #number of letters in our alphabet
 a = ord("a") #for shifting
 
 def encodeMessageShift(m, k):
-	c = "";
+	c = ""
 	#shift each letter in m by k
 	for char in m:
-		c += chr(((ord(char) - a + k) % NUM_LETTERS ) + a)
+		c += chr((ord(char) - a + k) % NUM_LETTERS + a)
+
+	return c
+
+def encodeMessageVigenere(m, k):
+	#Perform Vigenere's shift encryption with key of some length on m
+	c = ""
+
+	for char in range(len(m)):
+		mCharInt = ord(m[char]) - a
+		kCharInt = ord(k[char % len(k)]) - a
+
+		c += chr((mCharInt + kCharInt) % NUM_LETTERS + a)
 
 	return c
 
 def attackShiftCipher(c):
 	cipherFreqs = [0] * NUM_LETTERS
 	Ivalues = [0] * NUM_LETTERS
-	minKey = 200 #key is in range {0..25}
+	minKey = NUM_LETTERS #key is in range {0..25}
 	p = 0.0
 	q = 0.0
 
@@ -32,9 +43,9 @@ def attackShiftCipher(c):
 	#p = the frequency at which i appears in normal english text
 	#q = the frequency at which (i + j) appears in the cipher text
 	for j in range(NUM_LETTERS):
-		for i in range(NUM_KEYS):
+		for i in range(NUM_LETTERS):
 			p = ENGLISH_FREQS[i]
-			q = cipherFreqs[(i + j) % NUM_KEYS]
+			q = cipherFreqs[(i + j) % NUM_LETTERS]
 			Ivalues[j] += (p * q)
 
 		Ivalues[j] = round(Ivalues[j], DECIMALS)
@@ -48,31 +59,26 @@ def attackShiftCipher(c):
 
 def attackVigenereCipher(c):
 	minKeyLength = len(c) #maximum key length is the length of c
-	keyLength = 0
-	currChar = 0
-	lengthFound = 0
-	streamLength = 0
-	streamFreqs = [0.0] * NUM_LETTERS
-	keyLengthFreq = [0.0] * NUM_LETTERS
+	keyLengthFreq = [0.0] * len(c)
 
 	#Create keyLength streams of characters, where the length of each stream = length of c / keyLength
-	#i.e. for every possible keyLength we have keyLength streams. For every possible keyLength:
-	while (keyLength < len(c)):
-		keyLength += 1
-		currStreamChar = 0
+	#i.e. for every possible keyLength we have keyLength streams
+	for keyLength in range(1, len(c)):
+		streamFreqs = [0.0] * NUM_LETTERS
 		streamLength = math.floor(len(c) / keyLength)
-		while(currStreamChar < streamLength - 1):
-			#count the number of occurences of each character in the current stream 
-			streamFreqs[ord(c[currStreamChar * keyLength])] += 1
-			currStreamChar += 1
 
-		for i in range(NUM_LETTERS):
+		for i in range(0, streamLength):
+			#count the number of occurences of each character in the current stream
+			streamFreqs[ord(c[i * keyLength])  % NUM_LETTERS] += 1
+
+		for i in range(len(streamFreqs)):
 			#sum the frequencies of each of the characters in the stream squared
-			keyLengthFreq[i] += (streamFreqs[i] / streamLength) ** 2
+			keyLengthFreq[keyLength - 1] += (streamFreqs[i] / streamLength) ** 2
 
-	for i in range(NUM_LETTERS):
+	print(keyLengthFreq)
+	for i in range(len(keyLengthFreq)):
 		if (abs(ENGLISH_DIST - keyLengthFreq[i]) < minKeyLength):
-			minkKeyLength = i
+			minKeyLength = i
 
 	print(minKeyLength)
 
@@ -83,13 +89,11 @@ m = m.translate(remove)
 m = m.lower()
 
 #m = input("Input your message:")
-k = int(input("Enter the key:"))
+kShift = 2#int(input("Enter the key:"))
+cShift = encodeMessageShift(m, kShift)
 
-c = encodeMessageShift(m, k)
-#print("Your encrypted message is:", c)
-
-foundKey = attackShiftCipher(c)
-
-print("Key found: ", k)
-
-attackVigenereCipher(c)
+foundKey = attackShiftCipher(cShift)
+#m = "testingaslightlysmallerstringtomakemylifeeasier"
+kVigenere = "cafe"
+cVigenere = encodeMessageVigenere(m, kVigenere)
+attackVigenereCipher(cVigenere)
