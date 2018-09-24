@@ -1,3 +1,5 @@
+#Created by Colin Dyson on 09/24/2018 for COMP 4140 A1 Q1
+
 import string
 import math
 
