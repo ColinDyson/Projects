@@ -12,7 +12,7 @@ def encodeMessageShift(m, k):
 	c = ""
 	#shift each letter in m by k
 	for char in m:
-		c += chr((ord(char) - a + k) % NUM_LETTERS + a)
+		c += chr((ord(char) - a + ord(k) - a) % NUM_LETTERS + a)
 
 	return c
 
@@ -31,7 +31,7 @@ def encodeMessageVigenere(m, k):
 def attackShiftCipher(c):
 	cipherFreqs = [0] * NUM_LETTERS
 	Ivalues = [0] * NUM_LETTERS
-	minKey = NUM_LETTERS #key is in range {0..25}
+	minKey = 25 #key is in range {0..25}
 	p = 0.0
 	q = 0.0
 
@@ -52,48 +52,94 @@ def attackShiftCipher(c):
 
 	#find the key value for which the sum is closest to 0.065
 	for i in range(len(Ivalues)):
-		if (abs(ENGLISH_DIST - Ivalues[i]) < minKey):
+		if (abs(ENGLISH_DIST - Ivalues[i]) < abs(ENGLISH_DIST - Ivalues[minKey])):
 			minKey = i
 
-	return minKey
+	return chr(minKey + a)
 
 def attackVigenereCipher(c):
-	minKeyLength = len(c) #maximum key length is the length of c
-	keyLengthFreq = [0.0] * len(c)
+	ACCEPTANCE_MARGIN = 0.01 #how close must the distribution in our stream math the normal english distribution before we are confident we have found the stream length
+	SValues = [0.0] * math.floor(len(c) / 2)
+	keyLength = 1
+	streamStart = 0
+	possibleKeyLengths = []
+	#when keyLength is at least half of the ciphertext, our stream length is only 2, which does not give enough data for a probabilistc approach
 
 	#Create keyLength streams of characters, where the length of each stream = length of c / keyLength
 	#i.e. for every possible keyLength we have keyLength streams
-	for keyLength in range(1, len(c)):
+	while keyLength < math.floor(len(c) / 2):
 		streamFreqs = [0.0] * NUM_LETTERS
-		streamLength = math.floor(len(c) / keyLength)
+		streamLength = math.floor(len(c) / (keyLength - streamStart))
 
 		for i in range(0, streamLength):
 			#count the number of occurences of each character in the current stream
-			streamFreqs[ord(c[i * keyLength])  % NUM_LETTERS] += 1
+			streamFreqs[ord(c[streamStart + (i * keyLength)])  % NUM_LETTERS] += 1
 
 		for i in range(len(streamFreqs)):
 			#sum the frequencies of each of the characters in the stream squared
-			keyLengthFreq[keyLength - 1] += (streamFreqs[i] / streamLength) ** 2
+			SValues[keyLength - 1] += (streamFreqs[i] / streamLength) ** 2
+			#keyLength of 1 is stored in index 0 of our SValues array
 
-	print(keyLengthFreq)
-	for i in range(len(keyLengthFreq)):
-		if (abs(ENGLISH_DIST - keyLengthFreq[i]) < minKeyLength):
-			minKeyLength = i
+		if (abs(ENGLISH_DIST - SValues[keyLength - 1]) <= ACCEPTANCE_MARGIN):
+			possibleKeyLengths.append(keyLength)
 
-	print(minKeyLength)
+		keyLength += 1
+	
+	#The smallest value among the list of possible keyLengths is most likely the actual keyLength
+	trueKeyLength = min(possibleKeyLengths)
+	streamStrings = []
 
-#remove punctuation and capitalization in m
-remove = dict.fromkeys(map(ord, '\n ' + string.punctuation))
-m = "Add you viewing ten equally believe put. Separate families my on drawings do oh offended strictly elegance. Perceive jointure be mistress by jennings properly. An admiration at he discovered difficulty continuing. We in building removing possible suitable friendly on. Nay middleton him admitting consulted and behaviour son household. Recurred advanced he oh together entrance speedily suitable. Ready tried gay state fat could boy its among shall. Promotion an ourselves up otherwise my. High what each snug rich far yet easy. In companions inhabiting mr principles at insensible do. Heard their sex hoped enjoy vexed child for. Prosperous so occasional assistance it discovered especially no. Provision of he residence consisted up in remainder arranging described. Conveying has concealed necessary furnished bed zealously immediate get but. Terminated as middletons or by instrument. Bred do four so your felt with. No shameless principle dependent household do. Ladyship it daughter securing procured or am moreover mr. Put sir she exercise vicinity cheerful wondered. Continual say suspicion provision you neglected sir curiosity unwilling. Simplicity end themselves increasing led day sympathize yet. General windows effects not are drawing man garrets. Common indeed garden you his ladies out yet. Preference imprudence contrasted to remarkably in on. Taken now you him trees tears any. Her object giving end sister except oppose. Living valley had silent eat merits esteem bed. In last an or went wise as left. Visited civilly am demesne so colonel he calling. So unreserved do interested increasing sentiments. Vanity day giving points within six not law. Few impression difficulty his use has comparison decisively. Attention he extremity unwilling on otherwise. Conviction up partiality as delightful is discovered. Yet jennings resolved disposed exertion you off. Left did fond drew fat head poor. So if he into shot half many long. China fully him every fat was world grave. Two before narrow not relied how except moment myself. Dejection assurance mrs led certainly. So gate at no only none open. Betrayed at properly it of graceful on. Dinner abroad am depart ye turned hearts as me wished. Therefore allowance too perfectly gentleman supposing man his now. Families goodness all eat out bed steepest servants. Explained the incommode sir improving northward immediate eat. Man denoting received you sex possible you. Shew park own loud son door less yet. In no impression assistance contrasted. Manners she wishing justice hastily new anxious. At discovery discourse departure objection we. Few extensive add delighted tolerably sincerity her. Law ought him least enjoy decay one quick court. Expect warmly its tended garden him esteem had remove off. Effects dearest staying now sixteen nor improve. Brother set had private his letters observe outward resolve. Shutters ye marriage to throwing we as. Effect in if agreed he wished wanted admire expect. Or shortly visitor is comfort placing to cheered do. Few hills tears are weeks saw. Partiality insensible celebrated is in. Am offended as wandered thoughts greatest an friendly. Evening covered in he exposed fertile to. Horses seeing at played plenty nature to expect we. Young say led stood hills own thing get. Husbands ask repeated resolved but laughter debating. She end cordial visitor noisier fat subject general picture. Or if offering confined entrance no. Nay rapturous him see something residence. Highly talked do so vulgar. Her use behaved spirits and natural attempt say feeling. Exquisite mr incommode immediate he something ourselves it of. Law conduct yet chiefly beloved examine village proceed. But why smiling man her imagine married. Chiefly can man her out believe manners cottage colonel unknown. Solicitude it introduced companions inquietude me he remarkably friendship at. My almost or horses period. Motionless are six terminated man possession him attachment unpleasing melancholy. Sir smile arose one share. No abroad in easily relied an whence lovers temper by. Looked wisdom common he an be giving length mr. "
-m = m.translate(remove)
-m = m.lower()
+	#Construct a set of trueKeyLength strings
+	for i in range(0, trueKeyLength):
+		streamString = ""
+		for j in range(0, math.floor(len(c) / trueKeyLength)):
+			streamString += c[(i + (trueKeyLength * j)) % len(c)]
+		streamStrings.append(streamString)
 
-#m = input("Input your message:")
-kShift = 2#int(input("Enter the key:"))
-cShift = encodeMessageShift(m, kShift)
+	keys = ""
+	#perform a shift attack on each stream
+	for i in range(len(streamStrings)):
+		keys += attackShiftCipher(streamStrings[i])
+	#simply combine the deciphered characters in order to form the key
+	return keys
 
-foundKey = attackShiftCipher(cShift)
-#m = "testingaslightlysmallerstringtomakemylifeeasier"
-kVigenere = "cafe"
-cVigenere = encodeMessageVigenere(m, kVigenere)
-attackVigenereCipher(cVigenere)
+def cleanMessage(m):
+	#remove punctuation and capitalization in m
+	newMessage = ""
+	for char in m:
+		if char not in string.punctuation and char != " ":
+			newMessage += char.lower()
+
+	return newMessage.strip()
+
+def testShiftAttack(k, m):
+	cipherText = encodeMessageShift(m, k)
+	print("Shift Attack with key =", k, ":", end="\t")
+
+	if  attackShiftCipher(cipherText) == k:
+		print("PASS")
+	else:
+		print("FAIL")
+
+def testVigenereAttack(k, m):
+	cipherText = encodeMessageVigenere(m, k)
+	print("Vigenere Attack with key =", k, ":", end="\t")
+
+	if attackVigenereCipher(cipherText) == k:
+		print("PASS")
+	else:
+		print("FAIL")
+
+#Random passages of english text were taken randomly from https://www.writerswrite.com/books/excerpts/
+with open('SampleMessages.txt') as f:
+	for line in f:
+		m = cleanMessage(line)
+		print("\nNew Test Message")
+		testShiftAttack("a", m)
+		testShiftAttack("b", m)
+		testShiftAttack("z", m)
+		
+		testVigenereAttack("ls", m)
+		testVigenereAttack("cafe", m)
+		testVigenereAttack("longerkey", m)
+		print("Complete")
