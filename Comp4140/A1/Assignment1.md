@@ -1,14 +1,49 @@
 Colin Dyson - 7683407
-# COMP 4140 ASSIGNMENT 1
+####COMP 4140 ASSIGNMENT 1
 
-3. To attack a shift cipher, we simply need to choose a message containing the single character 'a'. The resulting ciphertext will then be 
+(1) See AttackShiftCipher.py for solution. Test strings were chosen randomly from https://www.writerswrite.com/books/excerpts/
+
+(2) Cryptogram was solved with help from SubstitutionCipher.py
+
+(3) To attack a shift cipher, we simply need to choose a message containing the single character 'a'. The resulting ciphertext will then be
 $c = \{a..z\}, |c| = 1$. Since our message is 'a', the resulting ciphertext c will be the value of the key used for all other ciphertexts.  
-To attack a substitution cipher we only need to supply a message of length 26. Simply make the message the english alphabet and the resulting ciphertext will be a one to one keymap for all ciphertexts. If, for example, the fifth character of our ciphertext was 'T', we know that 'e' has been substituted for 'T' in every other ciphertext.  
-Breaking a Vigenere cipher requires choosing a message of at least $|k|$. If we send the message $'a'^k$, $c = k$. If $|k|$ is unknown, we can find it by choosing incrementally longer messages. At the first instance of our ciphertext constaining exactly 2 equal substrings, $|k| = |c|/2$. If the key chosen were some string which itself contained equal substrings, then our chosen k would not result in the correct plaintext, and we would continue to increment $|c|$.
+To attack a substitution cipher we only need to supply a message of length 26. Simply make the message the English alphabet and the resulting ciphertext will be a one to one keymap for all ciphertexts. If, for example, the fifth character of our ciphertext was 'T', we know that 'e' has been substituted for 'T' in every other ciphertext.  
+Breaking a Vigenere cipher requires choosing a message of at least $|k|$. If we send the message $'a'^k$, $c = k$. If $|k|$ is unknown, we can find it by choosing incrementally longer messages. At the first instance of our ciphertext containing exactly 2 equal substrings, $|k| = \frac{|c|}{2}$. If the key chosen were some string which itself contained equal substrings, then our chosen k would not result in the correct plaintext, and we would continue to increment $|c|$.
 
-4. The modified scheme is **not** perfectly secret. For an ecryption scheme to be perfectly secret, it must hold true that $Pr[M = m | C = c] = Pr[M =m]$. If we change the scheme such that $k \neq 0^l$, then we have leaked the information that $c \neq m$. Therefore $Pr[M =m|C=c] < Pr[M=m]$ and our scheme is no longer perfectly secret.
+(4) The modified scheme is **not** perfectly secret. For an encryption scheme to be perfectly secret, it must hold true that $Pr[M = m | C = c] = Pr[M =m]$. If we change the scheme such that $k \neq 0^l$, then we have leaked the information that $c \neq m$. Therefore $Pr[M =m|C=c] < Pr[M=m]$ and our scheme is no longer perfectly secret.
 
-5. Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C|$. 
-    
+(5.a) Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C|$.  
+Shannon's Theorem says that an encryption scheme is perfectly secret iff  
+\[\forall m \in M, \forall c \in C, \exists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]  
+Suppose that our scheme is perfectly secret and
+\[\forall m \in M, \forall c \in C,\,\nexists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]
 
+Choose $m =$ 'a', $c =$ 'u'  
+\[
+  \begin{align}
+  c &= m + k\\
+  k &= c - m\\
+  k &= \mathrm{'u'} - \mathrm{'a'}\\
+  k &= \mathrm{'u'}
+  \end{align}
+\]  
+But 'u' $\in K$, so we have a contradiction, and our scheme cannot be perfectly secret if there is no $k$ such that $Enc_{(k)}(m) = c$  
+$\therefore$ our scheme is perfectly secret.  
 
+(5.b) An encryption scheme may only be considered perfectly secret iff $|M| = |K| = |C|$. Our key space $K$ is the set of all permutations of the English alphabet. So $|K| = 26!$. $\therefore |M| = 26!$.  
+
+(5.c) With a fixed period $t$, the keys used by the Vigenere cipher are all character strings of length $t$. Our messages are all of length $t$, and the ciphertexts our scheme produces must therefore also be of length $t$. So $|K| = |M| = |C|$.  
+Suppose the scheme is perfectly secret and
+\[\forall m \in M, \forall c \in C,\,\nexists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]
+Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
+\[
+  \begin{align}
+  c_i &= m_i + k_i\\
+  k_i &= c_i - m_i\\\\
+  k &= \mathrm{c-a, o-a, l-a, o-a, u-a, r-a, s-a}\\
+  &= \mathrm{colours}
+  \end{align}
+\]
+But "colours" $\in K$, so we have a contradiction. Our Scheme cannot be perfectly secret if there is no key $k$ for which $Enc_{(k)}(m) = c$. $\therefore$ our scheme is perfectly secret.
+
+(6) 
