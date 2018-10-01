@@ -1,4 +1,8 @@
-#Created by Colin Dyson on 09/24/2018 for COMP 4140 A1 Q1
+#Name - Colin Dyson
+#userid - dysonc
+#Student number - 7683407
+#File SampleMessages.txt must be present in the same directory as this script to
+#properly run tests
 
 import string
 import math
@@ -86,7 +90,7 @@ def attackVigenereCipher(c):
 			possibleKeyLengths.append(keyLength)
 
 		keyLength += 1
-	
+
 	#The smallest value among the list of possible keyLengths is most likely the actual keyLength
 	trueKeyLength = min(possibleKeyLengths)
 	streamStrings = []
@@ -140,7 +144,7 @@ with open('SampleMessages.txt') as f:
 		testShiftAttack("a", m)
 		testShiftAttack("b", m)
 		testShiftAttack("z", m)
-		
+
 		testVigenereAttack("ls", m)
 		testVigenereAttack("cafe", m)
 		testVigenereAttack("longerkey", m)

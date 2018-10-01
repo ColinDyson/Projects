@@ -1,9 +1,9 @@
-Colin Dyson - 7683407
+Colin Dyson - dysonc - 7683407
 ####COMP 4140 ASSIGNMENT 1
 
-(1) See AttackShiftCipher.py for solution. Test strings were chosen randomly from https://www.writerswrite.com/books/excerpts/
+(1) See attackciphers.py for coded solution. Can be run using `python attackciphers.py` Test strings were chosen randomly from https://www.writerswrite.com/books/excerpts/
 
-(2) Cryptogram was solved with help from SubstitutionCipher.py
+(2) Cryptogram was solved with help from cryptogram.py. Can be run using `python cryptogram.py`.
 
 (3) To attack a shift cipher, we simply need to choose a message containing the single character 'a'. The resulting ciphertext will then be
 $c = \{a..z\}, |c| = 1$. Since our message is 'a', the resulting ciphertext c will be the value of the key used for all other ciphertexts.  
@@ -46,4 +46,4 @@ Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
 \]
 But "colours" $\in K$, so we have a contradiction. Our Scheme cannot be perfectly secret if there is no key $k$ for which $Enc_{(k)}(m) = c$. $\therefore$ our scheme is perfectly secret.
 
-(6) 
+(6)
