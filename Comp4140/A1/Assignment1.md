@@ -3,7 +3,11 @@ Colin Dyson - dysonc - 7683407
 
 (1) See attackciphers.py for coded solution. Can be run using `python attackciphers.py` Test strings were chosen randomly from https://www.writerswrite.com/books/excerpts/
 
-(2) Cryptogram was solved with help from cryptogram.py. Can be run using `python cryptogram.py`.
+(2) Cryptogram was solved with help from cryptogram.py, which serves as an interactive cryptogram helper and can be run using `python cryptogram.py`. The user can enter what letters they wish to substitute, and the updated ciphertext will be displayed. Using information gathered from the frequency table produced by the script, and some intuition, the solution was found to be:  
+
+```cryptographic systems are extremely difficult to build nevertheless for some reason many nonexperts insist on designing new encryption schemes that seem to them to be more secure than any other scheme on earth the unfortunate truth however is that such schemes are usually trivial to break```
+
+Spaces were inserted manually for readability.
 
 (3) To attack a shift cipher, we simply need to choose a message containing the single character 'a'. The resulting ciphertext will then be
 $c = \{a..z\}, |c| = 1$. Since our message is 'a', the resulting ciphertext c will be the value of the key used for all other ciphertexts.  
