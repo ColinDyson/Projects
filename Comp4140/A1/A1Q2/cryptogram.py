@@ -13,7 +13,10 @@ def printKeyMap(c):
     t = PrettyTable()
     t.field_names = ["Character", "Count in C", "Key"]
     for i in range (len(ALPHABET)):
-        t.add_row([ALPHABET[i], c.lower().count(ALPHABET[i]), keyMap[i]])
+        t.add_row([ALPHABET[i], CIPHERTEXT.count(ALPHABET[i].upper()), keyMap[i]])
+        #counts are shown for the original ciphertext characters only, Since
+        #subtitutions will result in inflated numbers which are not representative
+        #of m
     print(t)
 
 def updateKeyMap():

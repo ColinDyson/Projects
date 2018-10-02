@@ -14,9 +14,9 @@ $c = \{a..z\}, |c| = 1$. Since our message is 'a', the resulting ciphertext c wi
 To attack a substitution cipher we only need to supply a message of length 26. Simply make the message the English alphabet and the resulting ciphertext will be a one to one keymap for all ciphertexts. If, for example, the fifth character of our ciphertext was 'T', we know that 'e' has been substituted for 'T' in every other ciphertext.  
 Breaking a Vigenere cipher requires choosing a message of at least $|k|$. If we send the message $'a'^k$, $c = k$. If $|k|$ is unknown, we can find it by choosing incrementally longer messages. At the first instance of our ciphertext containing exactly 2 equal substrings, $|k| = \frac{|c|}{2}$. If the key chosen were some string which itself contained equal substrings, then our chosen k would not result in the correct plaintext, and we would continue to increment $|c|$.
 
-(4) The modified scheme is **not** perfectly secret. For an encryption scheme to be perfectly secret, it must hold true that $Pr[M = m | C = c] = Pr[M =m]$. If we change the scheme such that $k \neq 0^l$, then we have leaked the information that $c \neq m$. Therefore $Pr[M =m|C=c] < Pr[M=m]$ and our scheme is no longer perfectly secret.
+(4) The modified scheme is **not** perfectly secret. For an encryption scheme to be perfectly secret, it must hold true that $Pr[M = m | C = c] = Pr[M =m]$. If we change the scheme such that $k \neq 0^l$, then for any message chosen, $c \neq m$. so $Pr[C = c | M = m] = \frac{1}{|M| - 1} \neq Pr[M = m]$.
 
-(5.a) Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C| = 26$.  
+(5.a) Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C| = 26$. Assume adding to $m^{'}, k, c$ is taken modulo 26.  
 
 Given $c \in C, m^{'} \in M:$
 \[
@@ -24,6 +24,7 @@ Given $c \in C, m^{'} \in M:$
   Pr[C = c | M = m^{'}] &= Pr[Enc_{(k)}(m^{'})] = c\\
   &= Pr[m^{'} + k] = c\\
   &= Pr[k = c - m]\\
+  &= Pr[K = k]\\
   &= \frac{1}{26}, \mathrm{given\;Gen}
   \end{align}
 \]
@@ -49,7 +50,7 @@ $\therefore$ the scheme is perfectly secret.
 
 (5.c) With a fixed period $t$, the keys used by the Vigenere cipher are all character strings of length $t$. Our messages are all of length $t$, and the ciphertexts our scheme produces must therefore also be of length $t$. So $|K| = |M| = |C| = 26^t$.  
 
-Suppose the scheme is not perfectly secret. Since the first part of Shannon's Theorem holds true, then it must be true that
+Suppose the scheme is not perfectly secret. Then the first part of Shannon's Theorem holds true, then it must be true that
 \[\exists m \in M, \exists c \in C,\,\forall \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) \neq c\]
 Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
 \[
@@ -60,6 +61,6 @@ Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
   &= \mathrm{colours}
   \end{align}
 \]
-But if $k = \mathrm{'colours' and\;} m = \mathrm{'aaaaaaa',\;}  Enc_{(k)}(m) =$ 'colours', and $Enc_{(k)}(m) = c$. We have a contradiction. $\therefore$ our scheme is perfectly secret.
+But if $k = \mathrm{'colours' and\;} m = \mathrm{'aaaaaaa',\;}  Enc_{(k)}(m) =$ 'colours', and $Enc_{(k)}(m) = c$. It is also apparent that $k$ will always be some $t$ length string of characters, since for correctness we must compute all character arithmetic under modulo 26. i.e. This equality will hold for all values of $k$ and we have a contradiction. $\therefore$ our scheme is perfectly secret.
 
 (6) temp
