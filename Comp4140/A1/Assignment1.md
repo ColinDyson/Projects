@@ -12,29 +12,41 @@ Breaking a Vigenere cipher requires choosing a message of at least $|k|$. If we 
 
 (4) The modified scheme is **not** perfectly secret. For an encryption scheme to be perfectly secret, it must hold true that $Pr[M = m | C = c] = Pr[M =m]$. If we change the scheme such that $k \neq 0^l$, then we have leaked the information that $c \neq m$. Therefore $Pr[M =m|C=c] < Pr[M=m]$ and our scheme is no longer perfectly secret.
 
-(5.a) Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C|$.  
-Shannon's Theorem says that an encryption scheme is perfectly secret iff  
-\[\forall m \in M, \forall c \in C, \exists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]  
-Suppose that our scheme is perfectly secret and
-\[\forall m \in M, \forall c \in C,\,\nexists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]
+(5.a) Gen of a shift cipher provides $k \in K = \{a..z\}$, where k is chosen with probability $1/|K|$. If only a single character is encrypted, then $m \in M = \{a..z\}$ and $c \in C = \{a..z\}$, so $|K| = |M| = |C| = 26$.  
 
-Choose $m =$ 'a', $c =$ 'u'  
+Given $c \in C, m^{'} \in M:$
 \[
   \begin{align}
-  c &= m + k\\
-  k &= c - m\\
-  k &= \mathrm{'u'} - \mathrm{'a'}\\
-  k &= \mathrm{'u'}
+  Pr[C = c | M = m^{'}] &= Pr[Enc_{(k)}(m^{'})] = c\\
+  &= Pr[m^{'} + k] = c\\
+  &= Pr[k = c - m]\\
+  &= \frac{1}{26}, \mathrm{given\;Gen}
   \end{align}
-\]  
-But 'u' $\in K$, so we have a contradiction, and our scheme cannot be perfectly secret if there is no $k$ such that $Enc_{(k)}(m) = c$  
-$\therefore$ our scheme is perfectly secret.  
+\]
+For any $m^{'} \in M$, and $\forall c \in C$,
+\[
+  \begin{align}
+  Pr[C = c] &= \sum_{m^{'} \in M}Pr[C=c | M = m^{'}] \cdot Pr[M = m^{`}]\\
+  &= \frac{1}{26} \sum_{m^{'} \in M} Pr[M=m^{`}]\\
+  &= \frac{1}{26}
+  \end{align}
+\]
+Using Baye's Theorem:
+\[
+  \begin{align}
+  Pr[M = m |C = c] &= \frac{Pr[C =c | M = m] \cdot Pr[M = m]}{Pr[C=c]}\\
+  &= \frac{\frac{1}{26} \cdot Pr[M = m]}{\frac{1}{26}}\\
+  &= Pr[M = m]
+  \end{align}
+\]
+$\therefore$ the scheme is perfectly secret.
 
 (5.b) An encryption scheme may only be considered perfectly secret iff $|M| = |K| = |C|$. Our key space $K$ is the set of all permutations of the English alphabet. So $|K| = 26!$. $\therefore |M| = 26!$.  
 
-(5.c) With a fixed period $t$, the keys used by the Vigenere cipher are all character strings of length $t$. Our messages are all of length $t$, and the ciphertexts our scheme produces must therefore also be of length $t$. So $|K| = |M| = |C|$.  
-Suppose the scheme is perfectly secret and
-\[\forall m \in M, \forall c \in C,\,\nexists \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) = c\]
+(5.c) With a fixed period $t$, the keys used by the Vigenere cipher are all character strings of length $t$. Our messages are all of length $t$, and the ciphertexts our scheme produces must therefore also be of length $t$. So $|K| = |M| = |C| = 26^t$.  
+
+Suppose the scheme is not perfectly secret. Since the first part of Shannon's Theorem holds true, then it must be true that
+\[\exists m \in M, \exists c \in C,\,\forall \;k \in K \mathrm{\;such\;that\;} Enc_{(k)}(m) \neq c\]
 Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
 \[
   \begin{align}
@@ -44,6 +56,6 @@ Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
   &= \mathrm{colours}
   \end{align}
 \]
-But "colours" $\in K$, so we have a contradiction. Our Scheme cannot be perfectly secret if there is no key $k$ for which $Enc_{(k)}(m) = c$. $\therefore$ our scheme is perfectly secret.
+But if $k = \mathrm{'colours' and\;} m = \mathrm{'aaaaaaa',\;}  Enc_{(k)}(m) =$ 'colours', and $Enc_{(k)}(m) = c$. We have a contradiction. $\therefore$ our scheme is perfectly secret.
 
 (6)
