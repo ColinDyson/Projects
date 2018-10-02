@@ -58,4 +58,4 @@ Choose $t =$ 7, $m =$ 'aaaaaaa', $c =$ 'colours'
 \]
 But if $k = \mathrm{'colours' and\;} m = \mathrm{'aaaaaaa',\;}  Enc_{(k)}(m) =$ 'colours', and $Enc_{(k)}(m) = c$. We have a contradiction. $\therefore$ our scheme is perfectly secret.
 
-(6)
+(6) temp
