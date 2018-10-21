@@ -35,11 +35,35 @@ And our encryption scheme has indistinguishable encryptions in the presence of a
 ######(2)
 
 ######(3)  
-**a)** The scheme does not have indistinguishable encryptions in the presence of an eavesdropper. The value of $r$ is concatenated to the beginning of our ciphertext. Since we use $G(r)$ to encrypt $m$ and any adversary can be assumed to have access to $G$, they are fully able to decrypt any $c$. CPA-security is just stricter definition of indistinguishability in the presence of an eavesdropper, then the scheme is not cpa-secure for the same reasons.  
+**a)** The scheme does not have indistinguishable encryptions in the presence of an eavesdropper. The value of $r$ is concatenated to the beginning of our ciphertext. Since we use $G(r)$ to encrypt $m$ and any adversary can be assumed to have access to $G$, they are fully able to decrypt any $c$. CPA-security is just stricter definition eavesdropper security, so if a scheme is no eav-secure, it cannot be cpa-secure.  
 
-**b)** This scheme uses the pseudorandom function $F_k$ with input $0^n$ to encrypt a message of length $n$. Encrypting any message $m$ will then result in a ciphertext of length $n$. Since $\mathit{|C|} = \mathit{|M|} = \mathit{|K|}$ and keys are chosen with
+**b)** This scheme uses the pseudorandom function $F_k$ with input $0^n$ to encrypt a message of length $n$. Using a static input means $F_k$ is limited to only have a number of possibly inputs that is exactly equal to $|\mathcal{K}|$.
+This means that for every message $m$ we are choosing from $\mathcal{K}$ with a pseudorandom distrution to produce $c$. Assuming some adversary cannot distinguish between our pseudorandom distribution and a purely random one, and since $|m| = |k| = |c|$, this scheme is equivalent to the one-time pad and is thus eav-secure.  
 
-(4)
+It is easy to observe that the scheme is not cpa-secure due to it's deterministic nature. If we consider the experiment ${\mathrm{Priv}_k}_{A, \Pi}^{cpa}$ where we encrypt one of two messages, we can show that the adversary can succeed with a probability of 1. With access to an oracle which will encrypt any message of the adversary's choosing using the same key used to encrypt our original message, $F_k(0^n)$ will result in the same $n$-length value for any encryption by the oracle. Our adversary chooses the values of $m_0$ and $m_1$, and so can simply ask the oracle to encrypt them both to produce $c_O$. $A$ then outputs the bit $b\prime$ such that $\mathrm{Enc}_k(m_b\prime) = c$ where $c$ is the message we encrypted.
+\[
+\begin{align}
+c &:= m_b \oplus F_k(0^n)\\
+c_{O_0} &:= m_0 \oplus F_k(0^n)\\
+c_{O_1} &:= m_1 \oplus F_k(0^n)\\
+c_{O_0} &= c \implies m_b = m_0, b\prime = 0\\
+c_{O_1} &= c \implies m_b = m_1, b\prime = 1\\\\
+&Pr[{\mathrm{Priv}_k}_{A, \Pi}^{cpa}(n) = 1] = 1
+\end{align}
+\]
+Therefore the scheme is not cpa-secure.  
+
+**c)** To encrypt $m \in \{0, 1\}^{2n}$, parse $m$ as $m_1 || m_2$ with $|m_1| = |m_2|$, then choose uniform $r \in \{0, 1\}^n$ and send $\langle r, m_1 \oplus F_k(r), m_2 \oplus F_k(r+1) \rangle$  
+Assume that the encryption scheme is cpa-secure. Let $\widetilde{\Pi}$ be an encryption scheme that is exactly the same as $\Pi = (\mathrm{Gen, Enc, Dec})$ except that a truly random function $f$ is used in place of $F_k$. $\widetilde{\mathrm{Gen}}(1^n)$ chooses a uniform function $f \in \mathrm{Func}_n$, and $\widetilde{\mathrm{Enc}}$ encrypts like Enc except $f$ is used instead of $F_k$.  
+
+Fix an arbitrary PPT adversary $A$, and let $q(n)$ b an upper bound on the number of queries that $A(1^n)$ makes to its encryption oracle. We must first show that
+\[
+|Pr [{\mathrm{Priv}_k}_{A, \Pi}^{cpa}(n) = 1] - Pr [{\mathrm{Priv}_k}_{A, \widetilde{\Pi}}^{cpa}(n) = 1]| \leq \mathrm{negl}(n)
+\]
+We prove this by reduction. Use $A$ to construct a distinguisher $D$ for the pseudorandom function $F$. $D$ is given oracle access to some function $\mathscr{O}$ and its goal is to determine whether this funciton is pseudorandom or random. To do this, $D$ emulates experiment $\mathrm{PrivK}^{cpa}$ for $A$ in the manner described below, and observes whether
+
+######(4)  
+Define some adversary $A$ which knows in advance the initialization vector $IV$ that will be used for the second encrypted message. If $A$ knows that some encrypted text is one of two messages, then they know that using CBC, $m_1 \in \{m_1^0, m_1^1\}$. They observe the first ciphertext to be $\langle IV, c_1, .. c_i \rangle$ \. The attacker then requests an encryption of a second message $m_{i+1}, .. m_j$ where $m_{i+1} = IV \oplus m_1^0 \oplus c_i$ and observes a second ciphertext $\langle c_{i+1}, .. c_j \rangle$.
 
 (5)
 
