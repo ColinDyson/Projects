@@ -2,40 +2,37 @@ Colin Dyson - dysonc - 7683407
 ####COMP 4140 ASSIGNMENT 1
 
 ######(1)
-- Gen: on input $1^n$, choose uniform $k \in \{0,1\}^n$ and output it as the key
+Define our encryption scheme as follows: on input of a plaintext message $m$ where $|m| \leq \ell(n)$, where $\ell(n)$ is some polynomial function of $n$:
 
-- Enc: on input a key $k \in \{0,1\}^n$ and a message $m \in \{0,1\}^l$, $|m| = l \leq \ell(n)$, choose $p \in \{0, 1\}^{2\ell(n) - l}$ uniformly and append to the end of $m$. Finally, encode $q = |p| + n$ into $n$ bits and append to $m$. The resulting $m\prime$ will be of length $2\ell(n) + n$. Output the ciphertext
+We pad $m$ to a length of $L = \ell(n) + n$. Generate $r \in \{0, 1\}^{L - |m|}$ where $r$ is chosen from a uniform distribution. Append $r$ to $m$ to create $m'$. Finally, for every $m_i$ of length $n$ in $m$, generate the ciphertext $c_i = m_i \oplus k$ and concatenate the resulting $c_i$.
 \[
 \begin{align}
-m\prime &= \langle m, p, q \rangle\\
-c_i &:= k \oplus m\prime_i\\
-c &= \langle c_0, c_1, ... c_i \rangle\\
+m' &= \langle m, r \rangle\\
+&= \langle m_0, m_1, .. m_i \rangle\\
+c_i &= m_i \oplus k\\
+c &= \langle c_0, .. c_i \rangle
 \end{align}
 \]
-
-- Dec: on input a key $k \in \{0,1\}^n$ and a ciphertext $c \in \{0,1\}^{2\ell(n) + n}$, output the message
+We create an experiment with some PPT adversary $A$ with eavesdropping capabilities on our scheme $\Pi$. $A$ produces two messages $m_0, m_1$ of at most length $\ell(n)$. The messages need not be the same length. Our experiment chooses a bit $b$ randomly, then produces $c = \mathrm{Enc}_k(m_b)$. $A$ recieves $c$, then outbputs a bit $b'$.
 \[
 \begin{align}
-q &= m\prime_0 \oplus k\\
-m_i &:= k \oplus c_i\\
-m &= \langle m_0, m_1, ... m_{|c| - q} \rangle\\
+\mathrm{If\;b' = b,\;}&{\mathrm{Priv}_k}^{eav}_{A, \Pi} = 1\\
+\mathrm{Else,\;}&{\mathrm{Priv}_k}^{eav}_{A, \Pi} = 0
 \end{align}
 \]
-
-The scheme accepts messages of variable length up to some polynomial function of $n$, and produces ciphertexts of uniform length $2\ell(n) + n$. An adversary $A$ running in probabilistic polynomial time could perform an exhaustive search over all values of $q$. For any possible value $Q$,
-\[
-\mathrm{Pr}[Q = q] = \frac{1}{2^n}
-\]
-Which is a negligible function of $n$. Therefore,
+For our scheme to be secure, it must hold that
 \[
 \mathrm{Pr}[{\mathrm{Priv}_k}^{eav}_{A, \Pi} = 1] \leq \frac{1}{2} + \mathrm{negl}(n)
 \]
+Where $\mathrm{negl}(n)$ is a negligible function of $n$. We observe that for any length of $m$ that $A$ provides, we are padding $m$ to a uniform length of $\ell(n) + n$ with random bits. This makes distinguishing between
 And our encryption scheme has indistinguishable encryptions in the presence of an eavesdropper even when messages are not restricted to being equal length.  
 
 ######(2)
 
 ######(3)  
-**a)** The scheme does not have indistinguishable encryptions in the presence of an eavesdropper. The value of $r$ is concatenated to the beginning of our ciphertext. Since we use $G(r)$ to encrypt $m$ and any adversary can be assumed to have access to $G$, they are fully able to decrypt any $c$. CPA-security is just stricter definition eavesdropper security, so if a scheme is no eav-secure, it cannot be cpa-secure.  
+**a)** The scheme does not have indistinguishable encryptions in the presence of an eavesdropper. If $c = G(r) \oplus m$, then $m = G(r) \oplus c$. The value of $r$ is concatenated to the beginning of our ciphertext, and $G$ is fully available to our adversary (Kerchkoff's Principle states only the key may be private). Our adversary knows both $G(r)$ and $c$, and so can find any $m$.  
+
+Since a cpa-capable adversary has all the capabilites of a eav-capable adversary, a lack of eav-security implies the scheme is not cpa-secure either.
 
 **b)** This scheme uses the pseudorandom function $F_k$ with input $0^n$ to encrypt a message of length $n$. Using a static input means $F_k$ is limited to only have a number of possibly inputs that is exactly equal to $|\mathcal{K}|$.
 This means that for every message $m$ we are choosing from $\mathcal{K}$ with a pseudorandom distrution to produce $c$. Assuming some adversary cannot distinguish between our pseudorandom distribution and a purely random one, and since $|m| = |k| = |c|$, this scheme is equivalent to the one-time pad and is thus eav-secure.  
