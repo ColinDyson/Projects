@@ -40,7 +40,7 @@ And our encryption scheme has indistinguishable encryptions in the presence of a
 **b)** This scheme uses the pseudorandom function $F_k$ with input $0^n$ to encrypt a message of length $n$. Using a static input means $F_k$ is limited to only have a number of possibly inputs that is exactly equal to $|\mathcal{K}|$.
 This means that for every message $m$ we are choosing from $\mathcal{K}$ with a pseudorandom distrution to produce $c$. Assuming some adversary cannot distinguish between our pseudorandom distribution and a purely random one, and since $|m| = |k| = |c|$, this scheme is equivalent to the one-time pad and is thus eav-secure.  
 
-It is easy to observe that the scheme is not cpa-secure due to it's deterministic nature. If we consider the experiment ${\mathrm{Priv}_k}_{A, \Pi}^{cpa}$ where we encrypt one of two messages, we can show that the adversary can succeed with a probability of 1. With access to an oracle which will encrypt any message of the adversary's choosing using the same key used to encrypt our original message, $F_k(0^n)$ will result in the same $n$-length value for any encryption by the oracle. Our adversary chooses the values of $m_0$ and $m_1$, and so can simply ask the oracle to encrypt them both to produce $c_O$. $A$ then outputs the bit $b\prime$ such that $\mathrm{Enc}_k(m_b\prime) = c$ where $c$ is the message we encrypted.
+It is easy to observe that the scheme is not cpa-secure due to it's deterministic nature. If we consider the experiment ${\mathrm{Priv}_k}_{A, \Pi}^{cpa}$ where we encrypt one of two messages, we can show that the adversary can succeed with a probability of 1. First, $A$ provides us with two strings $m_0, m_1$. We choose a bit $b$ at random, then encrypt $m_b$ and pass the resulting ciphertext $c$ to our adversary. Our adversary then outputs a bit $b'$. If $b' = b$, ${\mathrm{Priv}_k}_{A, \Pi}^{cpa} = 1, else\;0$. With access to an oracle which will encrypt any message of the adversary's choosing using the same key used to encrypt our original message, $F_k(0^n)$ will result in the same $n$-length value for any encryption by the oracle. Our adversary chooses the values of $m_0$ and $m_1$, and so can simply ask the oracle to encrypt them both to produce $c_O$. $A$ then outputs the bit $b\prime$ such that $\mathrm{Enc}_k(m_b\prime) = c$ where $c$ is the message we encrypted.
 \[
 \begin{align}
 c &:= m_b \oplus F_k(0^n)\\
@@ -63,8 +63,32 @@ Fix an arbitrary PPT adversary $A$, and let $q(n)$ b an upper bound on the numbe
 We prove this by reduction. Use $A$ to construct a distinguisher $D$ for the pseudorandom function $F$. $D$ is given oracle access to some function $\mathscr{O}$ and its goal is to determine whether this funciton is pseudorandom or random. To do this, $D$ emulates experiment $\mathrm{PrivK}^{cpa}$ for $A$ in the manner described below, and observes whether
 
 ######(4)  
-Define some adversary $A$ which knows in advance the initialization vector $IV$ that will be used for the second encrypted message. If $A$ knows that some encrypted text is one of two messages, then they know that using CBC, $m_1 \in \{m_1^0, m_1^1\}$. They observe the first ciphertext to be $\langle IV, c_1, .. c_i \rangle$ \. The attacker then requests an encryption of a second message $m_{i+1}, .. m_j$ where $m_{i+1} = IV \oplus m_1^0 \oplus c_i$ and observes a second ciphertext $\langle c_{i+1}, .. c_j \rangle$.
+Define some adversary $A$ which knows in advance the initialization vector $IV$ that will be used for the second encrypted message. Let $A$ choose two messages $m_1^0, m_1^1$. We pick a value for bit $b$ at random, then encode $m_1 = m_1^b$. The adversary recieves $c$ and outputs a bit $b'$. Our experiment ${\mathrm{Priv}_k}_{A, \Pi}^{cpa}(n) = 1$ if $b' = b$, else it outputs 0. In order to be secure, it must hold that
+\[
+Pr[{\mathrm{Priv}_k}_{A, \Pi}^{cpa}(n) = 1] \leq \frac{1}{2} + \mathrm{negl}(n)
+\]
+They observe the first ciphertext to be $\langle IV, c_1, .. c_i \rangle$ \. The attacker then requests an encryption of a second message $m_{i+1}, .. m_j$ where $m_{i+1} = IV \oplus m_1^0 \oplus (IV + 1)$ and observes a second ciphertext $\langle c_{i+1}, .. c_j \rangle$.
+\[
+\begin{align}
+\mathrm{Let}\; m_1 &= m_0^1\\
+c_1 &= F_k(IV \oplus m_1^0)\\
+\mathrm{Choose}\;m_{i+1} &= IV \oplus m_1^0 \oplus (IV + 1)\\
+c_{i+1} &= F_k(m_{i + 1} \oplus (IV + 1))\\
+&= F_k(IV \oplus m_1^0)\\
+&= c_1
+\end{align}
+\]
+The above holds true if and only if $m_1$ in the original encrypted message is equal to $m_1^0$. There are only two possibilities for the value of $m_1$. Therefore, if $m_{i+1} \neq c_1$, then $m_1 = m_1^1$. This means that
+\[
+Pr[{\mathrm{Priv}_k}_{A, \Pi}^{cpa}(n) = 1] = 1
+\]
+And the scheme is **not** cpa-secure.
 
-(5)
+######(5)
+**CBC**
 
-(6)
+**OFB**
+
+**CTR**
+
+######(6)
