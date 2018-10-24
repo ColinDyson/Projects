@@ -92,7 +92,23 @@ Pr[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] = 1
 And the scheme is **not** cpa-secure.
 
 ######(5)
-**CBC**
+**CBC** For any block $i$ of length $n$:
+\[
+\begin{align}
+c_0 &= IV\\
+c_i &:= F_k(c_{i-1} \oplus m_i)\\
+F_k^{-1}(c_i) &:= c_{i-1} \oplus m_i\\
+F_K^{-1}(c_i) \oplus c_{i-1} &= m_i
+\end{align}
+\]
+
+For experiment ${\mathrm{PrivK}}_{A, \Pi}^{cca}(n)$, we fix some PPT adversary $A$ with access to an ecryption **and** decryption oracle. $A$ outputs two messages $m_0, m_1$. We choose a random bit $b$ and send $A$ the challenge ciphertext $c := Enc_K(m_b)$. After using the oracle for some polynomial amount of time, $A$ outputs $b'$. If $b' = b$, we output 1. Otherwise we output 0. For a scheme to be cca-secure, it must hold that
+\[
+\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] \leq \frac{1}{2} + \mathrm{negl}(n)
+\]
+Where negl($n$) is some negligible function of $n$.  
+
+Let $A$ output messages $m_0 = 0^{2n}, m_1 = 1^{2n}$. $A$ then takes the returned challenge ciphertext and asks the oracle to decrypt an altered ciphertext $c'$, where the ${n}^{th}$ (That is, the last bit of the first block of ciphertext, excluding IV) bit is flipped. As seen from the derived equation above, $m_i = F_K^{-1}(c_i) \oplus c_{i-1}$ and as a result, the $n^{th}$ bit of the second block of the resulting message will also be flipped. There are two possibilites for message $m'$. $m' = 0^{2n - 1}1$ or $m' = 1^{2n - 1}0$. In the first case, $b = 0$. Otherwise, $b = 1$. This shows that $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$, and therefore cipher block chaining is not cca-secure.
 
 **OFB**
 
