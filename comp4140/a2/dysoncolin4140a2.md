@@ -144,14 +144,3 @@ m_i &:= F_k(ctr + i) \oplus c_i\\
 As a result of the relationship shown above, CTR mode encryption can be broken using the same method used to break OFB mode. In our experiment ${\mathrm{PrivK}}_{A, \Pi}^{cca}(n)$, $A$ once again chooses $m_o = 0^\ell, m_1 = 1^\ell$. Flipping any bit in $c_i$ will result in the corresponding bit in $m_i$ being flipped, so for convenience $A$ flips the most significant bit and sends the ciphertext to the decryption oracle. The resulting plaintext will be $10^{\ell - 1}$ if $b = 0$, or $01^{\ell - 1}$ if $b = 1$. Set $b'$ to equal $b$ and $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$. CTR mode is not cca-secure.
 
 ######(6)
-To prove that these schemes are secure, we must prove that $F_k$ is indistinguishable from a purely random function. Fix a PPT adversary $A$ and let $q(n)$ be the polynomial upper bound on the number of queries that $A$ makes to an encryption oracle. If we let $\widetilde{\Pi}$ represent an encryption scheme that is identical to $\Pi$, but uses a truly random function $f$ in place of $F_k$, we must show that there is a negligible function such that
-\[
-|\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] - \mathrm{Pr}[{\mathrm{PrivK}}_{A, \widetilde{\Pi}}^{cpa}(n) = 1]| \leq \mathrm{negl}(n)
-\]
-We use $A$ to construct a distinguisher $D$ whose goal it is to determine whether a function $F$ is pseudorandom or random. $D$ is given oracle access to some function $O$, and $D$ emulates experiment $\mathrm{PrivK}^{cpa}$ for $A$. If $A$ succeeds then $D$ guesses that its oracle must be a pseudorandom function. If $A$ fails, $D$ guesses that the oracle must be a truly random function.  
-
-$D$ runs $A$. Whenever $A$ queries its oracle on a message, $D$ chooses a uniform $r \in \{0, 1\}^n$ and queries $O(r)$ to produce $y$. $D$ then returns the ciphertext $\langle r, y \oplus m \rangle$ to $A$.  
-
-When $A$ outputs $m_0, m_1$, choose a uniform bit and query $O(r)$ to obtain a response $y$. $D$ then returns the challenge ciphertext $\langle r, y \oplus m_b \rangle$ to $A$. Continue answering oracle queries of $A$ until $A$ outputs a bit $b'$. Output 1 if $b' = b$, and 0 otherwise.  
-
-$D$ runs in polynomial time since $A$ does. If $D$'s oracle is a pseudorandom function, then the view of $A$ when run as a subroutine of $D$ is distributed identically to the view of $A$ in the experiment
