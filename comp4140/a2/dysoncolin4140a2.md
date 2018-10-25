@@ -33,6 +33,18 @@ Combining the above with the ever present possibility of a random guess resultin
 Since $q(n)$ is polynomial, $\frac{q(n)}{2^n}$ is negligible. Therefore, we have shown that our scheme is eav-secure for variable length messages of at most length $\ell(n)$.
 
 ######(2)
+Gen: choose $k_0 \in \{0, 1\}^n$ from a uniform distribution, $k_1 = k_0 + 1$
+Enc: choose $r \in \{0, 1\}^n$ from a uniform distribution, $r \neq 0^n$   
+for any message $m \in \{0, 1\}^n$:
+\[
+\begin{align}
+\mathrm{if}\; m &\neq k_0: &c := \langle r, k_0, F_{k_1}(r) \oplus m \rangle\\
+\mathrm{if}\; m &= k_0: &c := \langle 0^n, k_0, m \rangle
+\end{align}
+\]
+To show that the scheme is secure under multiple encryptions, consider the experiment $\mathrm{PrivK}^{mult}_{A, \Pi}$ for some PPT adversary $A$. $A$ may choose any two lists of any $n$ bit strings to encrypt. If $A$ chooses all strings such that $m_i \neq k_0$, the challenge ciphertext will be produced using the first encryption method shown above. Since $F_k$ is a pseudorandom function, the ciphertext will be indistinguishable from a random distribution and thus be secure outside of a brute-force attack, which will only succeed with negligible probability given $|k_1| = n$. $A$ does not know $k_0$, and so may only try to force encryption under the second method above by guessing values for $k_0$ and choosing those values for $m$. Again, this is equivalent to a brute force attack on $k_1$, so will only succeed with a negligible probability. Since $A$ is bounded by polynomial time, any polynomial number of messages sent as part of a list will not result in a non-negligible chance of success.
+
+Unfortunately the scheme is not cpa-secure and is in fact trivial to break with the use of an oracle within the experiment ${\mathrm{PrivK}}^{cpa}_{A, \Pi}$. $A$ may choose any message $m_0$ to query the oracle with. The returned ciphertext will result in $A$ obtaining the value of $k_0$. With this knowledge, $A$ now chooses $m_1 = k_0$. After encrypting $m_b$ and sending the challenge text to $A$, the adversary will observe that the first $n$-bits of $c$ will either be $0^n$, or some other value. If the former, $b = 1$, else $b = 0$. Therefore $Pr[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] = 1$ and the scheme is not cpa-secure.
 
 ######(3)  
 **a)** The scheme does **not** have indistinguishable encryptions in the presence of an eavesdropper. If $c = G(r) \oplus m$, then $m = G(r) \oplus c$. The value of $r$ is concatenated to the beginning of our ciphertext, and $G$ is fully available to our adversary (Kerchkoff's Principle states only the key may be private). Our adversary knows both $G(r)$ and $c$, and so can find any $m$.  
@@ -65,7 +77,7 @@ We begin by splitting the problem in half. That is, we change the scheme to be t
 \]
 Both of these schemes are equivalent to Construction 3.30 on page 83 of the textbook, and as Theorem 3.31 states, if $F$ is a pseudorandom function, Construction 3.30 is a CPA-secure private-key encryption scheme for messages of length $n$.  
 
-Since neither $c_1$ nor $c_2$ influence the value of the other according to this scheme, we need only show that $r$ will only ever overlap with $r + 1$ with a negligible probability. $r + 1$ is calculated over $\mod(|r|)$ to ensure we can continue to encrypt even when our initial $r$ is chosen to be the maximum possible value. Since $|r| = n$, it is obvious that for any value of $r$, there exists a value of $r + 1$ such that $r \neq r + 1$. This would only be possible if $r$ were a single bit. Therefore, we can safely say that $m_1$ and $m_2$ are entirely independent, and so is the concatenation of the two. As a result, $\Pi$ is cpa-secure.  
+Since neither $c_1$ nor $c_2$ influence the value of the other according to this scheme, we need only show that $r$ will only ever overlap with $r + 1$ with a negligible probability. $r + 1$ is calculated over $\bmod(|r|)$ to ensure we can continue to encrypt even when our initial $r$ is chosen to be the maximum possible value. Since $|r| = n > 1$ (An n value of 1 would be trivial for any adversary to break and thus ineffective in any scenario), for any value of $r_i, r_{i + 1}\bmod(|r|) \neq r_i$. This would only be possible if $r$ were contained in a single bit $(n = 1)$. Therefore, we can safely say that $m_1$ and $m_2$ are entirely independent, and so is the concatenation of the two. As a result, $\Pi$ is cpa-secure.  
 
 Since cpa-security encapsulates eav-security, the scheme is also eav-secure.
 
@@ -110,9 +122,25 @@ Where negl($n$) is some negligible function of $n$.
 
 Let $A$ output messages $m_0 = 0^{2n}, m_1 = 1^{2n}$. $A$ then takes the returned challenge ciphertext and asks the oracle to decrypt an altered ciphertext $c'$, where the ${n}^{th}$ (That is, the last bit of the first block of ciphertext, excluding IV) bit is flipped. As seen from the derived equation above, $m_i = F_K^{-1}(c_i) \oplus c_{i-1}$ and as a result, the $n^{th}$ bit of the second block of the resulting message will also be flipped. There are two possibilites for message $m'$. $m' = 0^{2n - 1}1$ or $m' = 1^{2n - 1}0$. In the first case, $b = 0$. Otherwise, $b = 1$. This shows that $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$, and therefore cipher block chaining is not cca-secure.
 
-**OFB**
+**OFB** For any block $i$ of length $n$:
+\[
+\begin{align}
+c_0 &= IV\\
+c_i &:= F_k(y_{i-1}) \oplus m_i\\
+m_i &:= F_k(y_{i-1}) \oplus c_i\\
+\end{align}
+\]
+Where $y_{i-1}$ is the output of $F_k$ of the previous block. Let us emulate the same experiment as the one above for CBC mode. Once again, $A$ outputs $m_o = 0^\ell, m_1 = 1^\ell$ where $\ell$ is some polynomial function of $n$. $A$ then creates a new ciphertext $c'$ by flipping the most significant bit of the challenge text (excluding IV), and sends it to the decryption oracle. As a result of the relationship shown above, the resulting plaintext will be $10^{\ell - 1}$ if $b = 0$, or $01^{\ell - 1}$ if $b = 1$. $A$ then sets $b'$ to the correct value and $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$, proving that such a scheme is not cca-secure.
 
-**CTR**
+**CTR** For any block $i$ of length $n$:
+\[
+\begin{align}
+c_0 &= ctr\\
+c_i &:= F_k(ctr + i) \oplus m_i\\
+m_i &:= F_k(ctr + i) \oplus c_i\\
+\end{align}
+\]
+As a result of the relationship shown above, CTR mode encryption can be broken using the same method used to break OFB mode. In our experiment ${\mathrm{PrivK}}_{A, \Pi}^{cca}(n)$, $A$ once again chooses $m_o = 0^\ell, m_1 = 1^\ell$. Flipping any bit in $c_i$ will result in the corresponding bit in $m_i$ being flipped, so for convenience $A$ flips the most significant bit and sends the ciphertext to the decryption oracle. The resulting plaintext will be $10^{\ell - 1}$ if $b = 0$, or $01^{\ell - 1}$ if $b = 1$. Set $b'$ to equal $b$ and $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$. CTR mode is not cca-secure.
 
 ######(6)
 To prove that these schemes are secure, we must prove that $F_k$ is indistinguishable from a purely random function. Fix a PPT adversary $A$ and let $q(n)$ be the polynomial upper bound on the number of queries that $A$ makes to an encryption oracle. If we let $\widetilde{\Pi}$ represent an encryption scheme that is identical to $\Pi$, but uses a truly random function $f$ in place of $F_k$, we must show that there is a negligible function such that
