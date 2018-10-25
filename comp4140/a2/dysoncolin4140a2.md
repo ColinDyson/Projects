@@ -33,18 +33,18 @@ Combining the above with the ever present possibility of a random guess resultin
 Since $q(n)$ is polynomial, $\frac{q(n)}{2^n}$ is negligible. Therefore, we have shown that our scheme is eav-secure for variable length messages of at most length $\ell(n)$.
 
 ######(2)
-Gen: choose $k_0 \in \{0, 1\}^n$ from a uniform distribution, $k_1 = k_0 + 1$
-Enc: choose $r \in \{0, 1\}^n$ from a uniform distribution, $r \neq 0^n$   
+Gen: choose $k_0, k_1 \in \{0, 1\}^n$ from a uniform distribution
+Enc: choose $r \in \{0, 1\}^n$ from a uniform distribution
 for any message $m \in \{0, 1\}^n$:
 \[
 \begin{align}
 \mathrm{if}\; m &\neq k_0: &c := \langle r, k_0, F_{k_1}(r) \oplus m \rangle\\
-\mathrm{if}\; m &= k_0: &c := \langle 0^n, k_0, m \rangle
+\mathrm{if}\; m &= k_0: &c := \langle r, k_1, m \rangle
 \end{align}
 \]
-To show that the scheme is secure under multiple encryptions, consider the experiment $\mathrm{PrivK}^{mult}_{A, \Pi}$ for some PPT adversary $A$. $A$ may choose any two lists of any $n$ bit strings to encrypt. If $A$ chooses all strings such that $m_i \neq k_0$, the challenge ciphertext will be produced using the first encryption method shown above. Since $F_k$ is a pseudorandom function, the ciphertext will be indistinguishable from a random distribution and thus be secure outside of a brute-force attack, which will only succeed with negligible probability given $|k_1| = n$. $A$ does not know $k_0$, and so may only try to force encryption under the second method above by guessing values for $k_0$ and choosing those values for $m$. Again, this is equivalent to a brute force attack on $k_1$, so will only succeed with a negligible probability. Since $A$ is bounded by polynomial time, any polynomial number of messages sent as part of a list will not result in a non-negligible chance of success.
+To show that the scheme is secure under multiple encryptions, consider the experiment $\mathrm{PrivK}^{mult}_{A, \Pi}$ for some PPT adversary $A$. $A$ may choose any two lists of any $n$ bit strings to encrypt. If $A$ chooses all strings such that $m_i \neq k_0$, the challenge ciphertext will be produced using the first encryption method shown above. This is equivalent to Construction 3.30 on page 83 of the textbook, and as Theorem 3.31 states, if $F$ is a pseudorandom function, Construction 3.30 is a CPA-secure private-key encryption scheme for messages of length $n$. $A$ does not know $k_0$, and so may only try to force encryption under the second method above by guessing values for $k_0$ and choosing those values for $m$. This brute force attack on $k_0$ will only succeed with a negligible probability. Since $A$ is bounded by polynomial time, any polynomial number of messages sent as part of a list will not result in a non-negligible chance of success.
 
-Unfortunately the scheme is not cpa-secure and is in fact trivial to break with the use of an oracle within the experiment ${\mathrm{PrivK}}^{cpa}_{A, \Pi}$. $A$ may choose any message $m_0$ to query the oracle with. The returned ciphertext will result in $A$ obtaining the value of $k_0$. With this knowledge, $A$ now chooses $m_1 = k_0$. After encrypting $m_b$ and sending the challenge text to $A$, the adversary will observe that the first $n$-bits of $c$ will either be $0^n$, or some other value. If the former, $b = 1$, else $b = 0$. Therefore $Pr[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] = 1$ and the scheme is not cpa-secure.
+Unfortunately the scheme is not cpa-secure and is in fact trivial to break with the use of an oracle within the experiment ${\mathrm{PrivK}}^{cpa}_{A, \Pi}$. Let $A$ choose $m_0 = 0^n, m_1 = 1^n$. The returned challenge ciphertext will result in $A$ obtaining the value of $k_0$. With this knowledge, $A$ now queries the encryption oracle $m' = k_0$. As a result, $A$ observes the value of $k_1$ in the second $n$ bits on $c'$. With our pseudorandom function $F$ publicly known, and values $r$ and $k_1$, $A$ may now compute the value of $F_{k_2}(r)$ for themselves. They can then take $m_0 \oplus F_{k_2}$ and observe whether this is the same value of the challenge text. If so, $b' = 0$. Otherwise, $b' = 1$. Therefore $Pr[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] = 1$ and the scheme is not cpa-secure.
 
 ######(3)  
 **a)** The scheme does **not** have indistinguishable encryptions in the presence of an eavesdropper. If $c = G(r) \oplus m$, then $m = G(r) \oplus c$. The value of $r$ is concatenated to the beginning of our ciphertext, and $G$ is fully available to our adversary (Kerchkoff's Principle states only the key may be private). Our adversary knows both $G(r)$ and $c$, and so can find any $m$.  
@@ -89,10 +89,11 @@ Pr[{\mathrm{PrivK}}_{A, \Pi}^{cpa}(n) = 1] \leq \frac{1}{2} + \mathrm{negl}(n)
 They observe the first ciphertext to be $\langle IV, c_1, .. c_i \rangle$ \. The attacker then requests an encryption of a second message $m_{i+1}, .. m_j$ where $m_{i+1} = IV \oplus m_1^0 \oplus (IV + 1)$ and observes a second ciphertext $\langle c_{i+1}, .. c_j \rangle$.
 \[
 \begin{align}
-\mathrm{Let}\; m_1 &= m_0^1\\
+\mathrm{Let}\; m_1 &= m_1^0\\
 c_1 &= F_k(IV \oplus m_1^0)\\
 \mathrm{Choose}\;m_{i+1} &= IV \oplus m_1^0 \oplus (IV + 1)\\
 c_{i+1} &= F_k(m_{i + 1} \oplus (IV + 1))\\
+c_{i+1} &= F_k(IV \oplus m_1^0 \oplus (IV + 1) \oplus (IV + 1))\\
 &= F_k(IV \oplus m_1^0)\\
 &= c_1
 \end{align}
