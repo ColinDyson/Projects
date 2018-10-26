@@ -144,3 +144,45 @@ m_i &:= F_k(ctr + i) \oplus c_i\\
 As a result of the relationship shown above, CTR mode encryption can be broken using the same method used to break OFB mode. In our experiment ${\mathrm{PrivK}}_{A, \Pi}^{cca}(n)$, $A$ once again chooses $m_o = 0^\ell, m_1 = 1^\ell$. Flipping any bit in $c_i$ will result in the corresponding bit in $m_i$ being flipped, so for convenience $A$ flips the most significant bit and sends the ciphertext to the decryption oracle. The resulting plaintext will be $10^{\ell - 1}$ if $b = 0$, or $01^{\ell - 1}$ if $b = 1$. Set $b'$ to equal $b$ and $\mathrm{Pr}[{\mathrm{PrivK}}_{A, \Pi}^{cca}(n) = 1] = 1$. CTR mode is not cca-secure.
 
 ######(6)
+Assume a block length of $L$, challenge text $c$, and that we may access $c$ as a two-dimensional array, such that ``c[i][j]`` returns the $j^{\mathrm{th}}$ byte of the $i^\mathrm{th}$ block of $c$. When performing operations on bytes, assume that a value such as 1 or 0 to be 0x01 or 0x00 respectively. An operation on a block such as ``block = 0`` would similarly set every byte within that block to a value of 0x00. Assume the existence of some function ``decrypt(x)`` which will return the decrypted message from ciphertext x, or ``ERROR`` on error.
+```
+message = c
+
+//Beginning at 1 (block 0 contains IV)
+for (block currBlock in c) {
+  for (byte currByte in currBlock) {
+    c' = c
+    c'[currBlock][currByte] = c'[currBlock][currByte] XOR 1
+    if (decrypt(c') == ERROR) {
+      paddingBlock = currBlock + 1
+      paddingByte = currByte
+      b = L - paddingByte
+    }
+  }
+}
+/* For a ciphertext xxxx | xxxx | xxpp where x is a byte of the message
+  and p is a byte of padding, paddingBlock = 2 and paddingByte = 2
+*/
+
+//If b = 0, the message length is a multiple of the block length
+for (byte currByte = paddingByte to 0) {
+    for (byte i from 0 to 0xff) {
+      block delta = 0
+      delta[paddingByte - 1] = i //delta = 0x00...0xi0x00..0x00
+      for (byte j from 0 to b) {
+        delta[j] = (b + 1) XOR b //delta = 0x00..0xi, (0x(b + 1) XOR b) * b
+      }
+      c' = c
+      c'[paddingBlock - 1] = c'[paddingBlock - 1] XOR delta
+      if (decrypt(c') != ERROR) {
+        message[paddingBlock][currByte] = (b + 1) XOR i
+      }
+    }
+}
+//Last block containing a portion of the message is now deciphered.
+
+for ( block currBlock from paddingBlock - 1 to 1 ) { //Ignore first block (IV)
+  
+
+}
+```
