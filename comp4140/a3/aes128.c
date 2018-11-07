@@ -1,55 +1,61 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include "aes128.h"
 
-/*
-Args
-0 - executable name
-1 - input file name
-2 - output file name
-*/
-int main(int argc, char const *argv[]) {
+typedef uint8_t byte;
 
-  byteString *input = readInput(argv[1]);
-  FILE *outFile;
-  int inBytes = 0; //The length of the input file in bytes (- whitespace)
+int read_input(const char *inFile, int file_length, byte *input_string) {
+  FILE *in = fopen(inFile, "r");
 
-  if ((inFile = fopen(argv[1], "r")) == NULL) {
-    printf("ERROR opening %s\n", argv[1]);
+  if (in == NULL) {
+    printf("ERROR opening %s\n", inFile);
     return(1);
   }
-  if ((outFile = fopen(argv[2], "w")) == NULL) {
-    printf("ERROR opening %s\n", argv[2]);
-    return(1);
+  
+  for (int i = 0; i < file_length; i++) {
+    fscanf(in, "%xhh", &input_string[i]);
   }
 
-  while (fscanf(inFile, "%s") != EOF) {
-    inBytes++;
+  fclose(in);
+  return 0;
+}
+
+int print_bytes_as_hex(int string_length, byte *string ) {
+  if (string == NULL) {
+    printf("ADADADQDASDF");
   }
-
-  printf("%d\n", inBytes);
-
-  unsigned char in[inBytes][2];
-  rewind(inFile);
-
-  for (int i = 0; i < inBytes; i++) {
-    fscanf(inFile, "%s", in[i]);
+  for (int i = 0; i < string_length; i++) {
+    printf("%02x ", string[i]);
   }
-
-  fclose(inFile);
-  fclose(outFile);
 
   return 0;
 }
 
-byteString readInput(const char *in) {
-  FILE *in = fopen(in);
+int find_input_length(const char *file_name) {
+  int file_length = 0;
+  FILE *in = fopen(file_name, "r");
+
+  if (in == NULL) {
+    printf("ERROR opening %s\n", file_name);
+    return(1);
+  }
+
+  while (fscanf(in, "%x") != EOF) {
+    file_length++;
+  }
+
+  fclose(in);
+
+  return file_length;
 }
 
-void printByteArray(unsigned char *array, int length) {
-  for (int i = 0; i < length; i++) {
-    unsigned char buffer[3];
-    snprintf(buffer, 3, "%s", array[i]);
+int main(int argc, char const *argv[]) {
+  int input_length = find_input_length(argv[1]);
 
-    printf("%s\n", buffer);
-  }
+  byte *input_string = malloc(sizeof(byte)*input_length);
+  read_input(argv[1], input_length, input_string);
+  print_bytes_as_hex(input_length, input_string);
+
+  return 0;
 }
