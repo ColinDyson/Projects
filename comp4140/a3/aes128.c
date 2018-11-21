@@ -7,20 +7,39 @@
 typedef uint8_t byte;
 typedef uint32_t word;
 
-const int N_k = 4; //length of key, in 32-bit words
-const int N_b = 4; //number of columns in the State, in 32-bit words
-const int N_r = 10; //number of rounds
-const int N_s = 256; //size of s-box (by definition), in 8-bit bytes
-const char *const SBOX_NAME = "aes_sbox.txt";
-const char *const INV_SBOX_NAME = "aes_inv_sbox.txt";
+/*values given by x to the power (i-1) being powers of x (x is denoted as {02}) in the field GF(2^8)*/
+static const byte Rcon[255] = {
+  0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 
+  0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 
+  0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 
+  0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 
+  0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 
+  0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 
+  0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 
+  0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 
+  0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 
+  0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 
+  0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 
+  0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 
+  0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 
+  0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 
+  0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 
+  0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb  };
+
+static int N_k = 4; //length of key, in 32-bit words
+static int N_b = 4; //number of columns in the State, in 32-bit words
+static int N_r = 10; //number of rounds
+static int N_s = 256; //size of s-box (by definition), in 8-bit bytes
+static char *SBOX_NAME = "aes_sbox.txt";
+static char *INV_SBOX_NAME = "aes_inv_sbox.txt";
 byte *sbox;
 byte *inv_sbox;
 
-int read_input(const char *inFile, int file_length, byte *input_string) {
-  FILE *in = fopen(inFile, "r");
+int read_input(const char *input_filename, int file_length, byte *input_string) {
+  FILE *in = fopen(input_filename, "r");
 
   if (in == NULL) {
-    printf("ERROR: Cannot %s\n", inFile);
+    printf("ERROR: Cannot open %s\n", input_filename);
     return(1);
   }
   
@@ -80,7 +99,6 @@ int bytes_to_words(int n) {
 
 /*Substitutes each byte in the word with the corresponding byte in the S-box*/
 word sub_word(word w) {
-  printf("sub_word\n");
   byte first_nibble;
   byte second_nibble;
   byte *curr_byte;
@@ -96,24 +114,8 @@ word sub_word(word w) {
 }
 
 word rot_word(word w) {
-  printf("rot_word\n");
-  printf("%x\n", w);
-
   w = (w >> 8) | ((w & 0x000000FF) << 24);
 
-  printf("%x\n", w);
-  return w;
-}
-
-word r_con(int n) {
-  printf("r_con\n");
-  byte temp = 0x02;
-  for (int i = 0; i < n; i++) {
-    temp *= temp;
-  }
-
-  word w = (temp << 24) | 0xFF000000;
-  printf("n = %d, w = %x\n", n, temp);
   return w;
 }
 
@@ -122,33 +124,69 @@ int cipher(byte *in, byte *out) {
   return 0;
 }
 
+word create_word(byte a, byte b,  byte c, byte d) {
+  word result = 0;
+  result |= a << 24;
+  result |= b << 16;
+  result |= c << 8;
+  result |= a << 0;
+  return result;
+}
+
 int key_expansion(byte *key, word *key_schedule) {
-  word *temp;
-  byte *sched_ptr;
+  word temp = key_schedule[0];
 
   int i;
 
   for (i = 0; i < N_k; i++) {
-    sched_ptr = (byte *)(&key_schedule + i);
-    for (int j = 0; j < 4; j++) {
-      sched_ptr[j] = key[4 * i + j];
-    }
+    key_schedule[i] = create_word(key[4 * i ], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
   }
 
   i = N_k;
 
   while (i < N_b * (N_r + 1)) {
-    temp = &key_schedule[i - 1];
-    printf("%x\n", temp);
-    if (i % N_k == 0) {
-      printf("%d\n", i);
-      *temp = r_con(i / N_k) & sub_word(rot_word(*temp));
-      printf("%x\n", temp);
+    temp = key_schedule[i - 1];
+    if (i % N_k == 0)  {
+      temp = sub_word(rot_word(temp)) ^ Rcon[i / N_k];
+      printf("%08x\n", temp);
     }
-    printf("test\n");
-    key_schedule[i] = key_schedule[i - N_k] & *temp;
+    key_schedule[i] = key_schedule[i - N_k] & temp;
     i++;
   }
+  return 0;
+}
+
+int print_key_schedule(FILE *out, word *key_schedule) {
+  fprintf(out, "Key Schedule:\n");
+
+  for (int i = 0; i < N_b * (N_r + 1); i++) { //size of schedule by definition
+    fprintf(out, "%08x", key_schedule[i]);
+    if (i % 4 == 3) {
+      fprintf(out, "\n");
+    }
+    else {
+      fprintf(out, ",");
+    }
+  }
+
+  return 0;
+}
+
+int print_output_header(const char *input_filename, const char *key_filename, word *key_schedule, const char *output_filename) {
+  FILE *out = fopen(output_filename, "w");
+
+  if (out == NULL) {
+    printf("ERROR: Cannot open %s\n", output_filename);
+    return(1);
+  }
+
+  fprintf(out, "PlainText Filename: \"%s\"\n", input_filename);
+  fprintf(out, "Key Filename: \"%s\"\n\n", key_filename);
+  
+  print_key_schedule(out, key_schedule);
+
+  fclose(out);
+
   return 0;
 }
 
@@ -160,12 +198,15 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
+  const char *input_filename = argv[1];
+  const char *key_filename = argv[2];
+
   if (argc == 4) {
     //Output filename provided
     output_filename = argv[3];
   }
 
-  int input_length = find_input_length(argv[1]); //length of message, in bytes
+  int input_length = find_input_length(input_filename);
 
   byte *input_string = calloc(sizeof(byte), input_length);
   byte *output_string = calloc(sizeof(byte), input_length);
@@ -174,17 +215,19 @@ int main(int argc, char const *argv[]) {
   sbox = calloc(sizeof(byte), N_s);
   inv_sbox = calloc(sizeof(byte), N_s);
 
-  read_input(argv[1], input_length, input_string);
-  read_input(argv[2], words_to_bytes(N_k), key);
+  read_input(input_filename, input_length, input_string);
+  read_input(key_filename, words_to_bytes(N_k), key);
   read_input(SBOX_NAME, N_s, sbox);
   read_input(INV_SBOX_NAME, N_s, inv_sbox);
 
   key_expansion(key, key_schedule);
 
-  print_bytes_as_hex(input_length, input_string);
+  print_output_header(input_filename, key_filename, key_schedule, output_filename);
+  
+  /*print_bytes_as_hex(input_length, input_string);
   print_bytes_as_hex(N_k * 4, key);
   print_bytes_as_hex(N_s, sbox);
-  print_bytes_as_hex(N_s, inv_sbox);
+  print_bytes_as_hex(N_s, inv_sbox);*/
 
   return 0;
 }
