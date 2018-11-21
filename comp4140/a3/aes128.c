@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "aes128.h"
 
 typedef uint8_t byte;
@@ -77,8 +78,9 @@ int bytes_to_words(int n) {
   return n / sizeof(word) / sizeof(byte);
 }
 
-//Substitutes each byte in the word with the corresponding byte in the S-box
-word* sub_word(word *w) {
+/*Substitutes each byte in the word with the corresponding byte in the S-box*/
+word sub_word(word w) {
+  printf("sub_word\n");
   byte first_nibble;
   byte second_nibble;
   byte *curr_byte;
@@ -90,7 +92,28 @@ word* sub_word(word *w) {
 
     *curr_byte = sbox[16 * first_nibble + second_nibble];
   }
+  return w;
+}
 
+word rot_word(word w) {
+  printf("rot_word\n");
+  printf("%x\n", w);
+
+  w = (w >> 8) | ((w & 0x000000FF) << 24);
+
+  printf("%x\n", w);
+  return w;
+}
+
+word r_con(int n) {
+  printf("r_con\n");
+  byte temp = 0x02;
+  for (int i = 0; i < n; i++) {
+    temp *= temp;
+  }
+
+  word w = (temp << 24) | 0xFF000000;
+  printf("n = %d, w = %x\n", n, temp);
   return w;
 }
 
@@ -101,29 +124,28 @@ int cipher(byte *in, byte *out) {
 
 int key_expansion(byte *key, word *key_schedule) {
   word *temp;
+  byte *sched_ptr;
 
-  int i = 0;
+  int i;
 
-  while (i < N_k) {
-    *((byte*)(&key_schedule) + 3) = key[4 * i + 3];
-    *((byte*)(&key_schedule) + 2) = key[4 * i + 2];
-    *((byte*)(&key_schedule) + 1) = key[4 * i + 1];
-    *((byte*)(&key_schedule) + 0) = key[4 * i + 0];
-    //w[i] = word(key[4*i], key[4*i+1], key[4*i+2], key[4*i+3])
-    i++;
+  for (i = 0; i < N_k; i++) {
+    sched_ptr = (byte *)(&key_schedule + i);
+    for (int j = 0; j < 4; j++) {
+      sched_ptr[j] = key[4 * i + j];
+    }
   }
 
   i = N_k;
 
   while (i < N_b * (N_r + 1)) {
-    printf("testing\n");
     temp = &key_schedule[i - 1];
-    printf("again\n");
+    printf("%x\n", temp);
     if (i % N_k == 0) {
-      //temp = sub_word(rot_word(temp)) & r_con[i / N_k];
+      printf("%d\n", i);
+      *temp = r_con(i / N_k) & sub_word(rot_word(*temp));
       printf("%x\n", temp);
-      temp = sub_word(temp);
     }
+    printf("test\n");
     key_schedule[i] = key_schedule[i - N_k] & *temp;
     i++;
   }
@@ -158,14 +180,6 @@ int main(int argc, char const *argv[]) {
   read_input(INV_SBOX_NAME, N_s, inv_sbox);
 
   key_expansion(key, key_schedule);
-  // int n_blocks = input_length / 4 / N_b; //number of blocks = length(in bytes) / 4 bytes per row / num rows
-
-  // for (int i = 0; i < n_blocks; i++) {
-  //   byte *curr_input_block = &input_string[i * 4 * N_b];
-  //   byte *curr_output_block = &output_string[i * 4 * N_b]; //location in byte array = block number * 4 bytes per row * num rows
-
-  //   cipher(curr_input_block, curr_output_block);
-  // }
 
   print_bytes_as_hex(input_length, input_string);
   print_bytes_as_hex(N_k * 4, key);
