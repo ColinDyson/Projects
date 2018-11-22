@@ -13,3 +13,41 @@ d4d1c6f8,7c839d87,caf2b8bc,11f915bc
 ead27321,b58dbad2,312bf560,7f8d292f
 ac7766f3,19fadc21,28d12941,575c006e
 d014f9a8,c9ee2589,e13f0cc8,b6630ca6
+
+
+ENCRYPTION PROCESS
+------------------
+Plain Text:
+32	43	f6	a8		88	5a	30	8d		31	31	98	a2		e0	37	07	34		
+Round 1
+---------
+00	dd	1c	fa		95	0b	f8	c0		95	ba	1f	f5		01	94	4c	05		
+Round 2
+---------
+f9	98	84	86		2e	75	a9	fe		21	e3	67	cc		99	7b	af	77		
+Round 3
+---------
+98	62	f0	93		9b	8d	c4	c1		0a	0a	88	e5		15	81	d7	30		
+Round 4
+---------
+ea	8f	db	f6		26	da	b5	9a		56	48	6c	d4		c1	f3	85	90		
+Round 5
+---------
+24	2e	ba	e4		65	1f	14	ad		82	ae	a1	74		c4	db	9e	c2		
+Round 6
+---------
+5a	04	a7	17		35	fd	bd	59		a2	b8	45	80		fc	df	bb	a5		
+Round 7
+---------
+fd	e4	f3	88		1c	b6	53	8f		63	0d	aa	5d		73	3e	a1	dc		
+Round 8
+---------
+71	f4	bd	fd		77	c7	ab	49		47	bc	91	aa		4a	b3	df	79		
+Round 9
+---------
+d3	98	2e	22		a3	05	fa	3f		3b	aa	bf	21		9a	54	61	04		
+Last Round -13748
+---------
+ce	cf	f9	35		e2	e5	d3	e3		c0	5b	0b	ac		54	51	20	fc		
+Ciphertext:
+35	e3	ac	fc		00	00	00	00		00	00	00	00		00	00	00	00		
