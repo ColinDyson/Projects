@@ -7,7 +7,6 @@
 typedef uint8_t byte;
 typedef uint32_t word;
 
-/*values given by x to the power (i-1) being powers of x (x is denoted as {02}) in the field GF(2^8)*/
 static const byte Rcon[255] = {
   0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 
   0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 
@@ -89,73 +88,6 @@ int find_input_length(const char *file_name) {
   return file_length;
 }
 
-int words_to_bytes(int n) {
-  return n * sizeof(word) / sizeof(byte);
-}
-
-int bytes_to_words(int n) {
-  return n / sizeof(word) / sizeof(byte);
-}
-
-/*Substitutes each byte in the word with the corresponding byte in the S-box*/
-word sub_word(word w) {
-  byte first_nibble;
-  byte second_nibble;
-  byte *curr_byte;
-
-  for (int i = 0; i < words_to_bytes(1); i++) {
-    curr_byte = ((byte *)&w + i);
-    first_nibble = (*curr_byte >> 4);
-    second_nibble = (*curr_byte & 0x0F);
-
-    *curr_byte = sbox[16 * first_nibble + second_nibble];
-  }
-  return w;
-}
-
-word rot_word(word w) {
-  w = (w >> 8) | ((w & 0x000000FF) << 24);
-
-  return w;
-}
-
-int cipher(byte *in, byte *out) {
-  print_bytes_as_hex(16, in);
-  return 0;
-}
-
-word create_word(byte a, byte b,  byte c, byte d) {
-  word result = 0;
-  result |= a << 24;
-  result |= b << 16;
-  result |= c << 8;
-  result |= a << 0;
-  return result;
-}
-
-int key_expansion(byte *key, word *key_schedule) {
-  word temp = key_schedule[0];
-
-  int i;
-
-  for (i = 0; i < N_k; i++) {
-    key_schedule[i] = create_word(key[4 * i ], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
-  }
-
-  i = N_k;
-
-  while (i < N_b * (N_r + 1)) {
-    temp = key_schedule[i - 1];
-    if (i % N_k == 0)  {
-      temp = sub_word(rot_word(temp)) ^ Rcon[i / N_k];
-      printf("%08x\n", temp);
-    }
-    key_schedule[i] = key_schedule[i - N_k] & temp;
-    i++;
-  }
-  return 0;
-}
-
 int print_key_schedule(FILE *out, word *key_schedule) {
   fprintf(out, "Key Schedule:\n");
 
@@ -169,6 +101,69 @@ int print_key_schedule(FILE *out, word *key_schedule) {
     }
   }
 
+  return 0;
+}
+
+int words_to_bytes(int n) {
+  return n * sizeof(word) / sizeof(byte);
+}
+
+int bytes_to_words(int n) {
+  return n / sizeof(word) / sizeof(byte);
+}
+
+/*Substitutes each byte in the word with the corresponding byte in the S-box*/
+word sub_word(word w) {
+  byte *curr_byte;
+
+  for (int i = 0; i < 4; i++) {
+    curr_byte = ((byte *)&w + i);
+    *curr_byte = sbox[*curr_byte];
+  }
+  return w;
+}
+
+word rot_word(word w) {
+  w = (w << 8) | ((w & 0xFF000000) >> 24);
+
+  return w;
+}
+
+int cipher(byte *in, byte *out) {
+  print_bytes_as_hex(16, in);
+  return 0;
+}
+
+int key_expansion(byte *key, word *key_schedule) {
+  word temp;
+
+  int i;
+
+  //First 4 words of the key schedule are equal to the key
+  for (i = 0; i < N_k; i++) {
+    word new_word = key[4 * i] << 24;
+    new_word |= key[4 * i + 1] << 16;
+    new_word |= key[4 * i + 2] << 8;
+    new_word |= key[4 * i + 3];
+    key_schedule[i] = new_word;
+  }
+
+  i = N_k;
+
+  while (i < N_b * (N_r + 1)) {
+    temp = key_schedule[i - 1];
+
+    if (i % N_k == 0)  {
+      temp = rot_word(temp);
+      temp = sub_word(temp);
+      //Construct word with byte 0 as the rcon value for i / N_k
+      word r_con_word = Rcon[i / N_k] << 24;
+      temp ^= r_con_word;
+    }
+    key_schedule[i] = key_schedule[i - N_k] ^ temp;
+
+    i++;
+  }
   return 0;
 }
 
@@ -187,6 +182,15 @@ int print_output_header(const char *input_filename, const char *key_filename, wo
 
   fclose(out);
 
+  return 0;
+}
+
+
+int encrypt(byte *in, byte *out, word* key_schedule) {
+  return 0;
+}
+
+int decrypt(byte *in, byte *out, word *key_schedule) {
   return 0;
 }
 
@@ -224,10 +228,9 @@ int main(int argc, char const *argv[]) {
 
   print_output_header(input_filename, key_filename, key_schedule, output_filename);
   
-  /*print_bytes_as_hex(input_length, input_string);
-  print_bytes_as_hex(N_k * 4, key);
-  print_bytes_as_hex(N_s, sbox);
-  print_bytes_as_hex(N_s, inv_sbox);*/
+  encrypt(input_string, output_string, key_schedule);
+
+  //decrypt();
 
   return 0;
 }
